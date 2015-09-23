@@ -32,5 +32,11 @@
     <ClInclude Include="keypad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="assets\background.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assets\titlescreen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

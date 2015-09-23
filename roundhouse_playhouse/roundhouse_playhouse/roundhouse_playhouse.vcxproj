@@ -68,6 +68,8 @@
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="assets\background.h" />
+    <ClInclude Include="assets\titlescreen.h" />
     <ClInclude Include="gba.h" />
     <ClInclude Include="gfx.h" />
     <ClInclude Include="keypad.h" />
