@@ -38,5 +38,11 @@
     <ClInclude Include="assets\titlescreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="sound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assets\player_still.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

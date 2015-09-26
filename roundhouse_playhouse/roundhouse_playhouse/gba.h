@@ -85,8 +85,8 @@ typedef unsigned long word;
 #define REG_SG41       *(u16*)0x400007C
 #define REG_SGCNT0     *(u32*)0x4000080
 #define REG_SGCNT0_L   *(u16*)0x4000080
-#define REG_SGCNT0_H   *(u16*)0x4000082
-#define REG_SGCNT1     *(u16*)0x4000084
+#define REG_SGCNT0_H   *(u16*)0x4000082 //sound
+#define REG_SGCNT1     *(u16*)0x4000084	//sound
 #define REG_SGBIAS     *(u16*)0x4000088
 #define REG_SGWR0      *(u32*)0x4000090
 #define REG_SGWR0_L    *(u16*)0x4000090
