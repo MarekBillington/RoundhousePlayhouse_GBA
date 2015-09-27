@@ -44,5 +44,11 @@
     <ClInclude Include="assets\player_still.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="screenmode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assets\opponent_still.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

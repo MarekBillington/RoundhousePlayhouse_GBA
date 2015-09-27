@@ -69,11 +69,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="assets\background.h" />
+    <ClInclude Include="assets\opponent_still.h" />
     <ClInclude Include="assets\player_still.h" />
     <ClInclude Include="assets\titlescreen.h" />
     <ClInclude Include="gba.h" />
     <ClInclude Include="gfx.h" />
     <ClInclude Include="keypad.h" />
+    <ClInclude Include="screenmode.h" />
     <ClInclude Include="sound.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
