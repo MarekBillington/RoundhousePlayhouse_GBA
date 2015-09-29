@@ -23,8 +23,6 @@ enum FighterStates
 	still,
 	attacking,
 	moving,
-	dead,
-	stunned
 };
 
 //drawing functions
@@ -101,7 +99,6 @@ int main(void)
 
 		//controls what state the player and opponent
 		enum FighterStates pl_state = still;
-		enum FighterStates opp_state = still;
 
 		playx = 60;
 		playy = 155 - player_still_HEIGHT;
@@ -125,7 +122,7 @@ int main(void)
 			Flip();
 		}
 
-		while ((pl_state != dead) || (opp_state != dead))
+		while ((pl_life > 0) && (op_life > 0))
 		{
 			// prolly want to do a screen flip here for speed????
 			// anyhow method is as follows
@@ -136,6 +133,7 @@ int main(void)
 			// move the bombs
 			// check for collision
 			// subtract from life
+			pl_state = still;
 
 			DrawBackground();
 			DrawPlayerLife(pl_life);
@@ -151,10 +149,21 @@ int main(void)
 			if (!((*KEYS) & KEY_RIGHT))
 			{
 				playx += 2;
+				pl_state = moving;
 			}
 			if (!((*KEYS) & KEY_LEFT))
 			{
 				playx -= 2;
+				pl_state = moving;
+			}
+			if (!((*KEYS) & KEY_A))
+			{
+				pl_state = attacking;
+				
+			}
+			if (!((*KEYS) & KEY_B))
+			{
+				pl_state = blocking;
 			}
 			
 			//boundarycheck for player and opponent
@@ -169,43 +178,72 @@ int main(void)
 			}
 
 			//control opponent
-
-			if (playx < oppx)
+			if ((pl_state == still) || (pl_state == moving) || (((pl_state == blocking) || (pl_state == attacking)) && (oppx != playx)))
 			{
+				if (playx < oppx)
+				{
 
-				if (oppx < 0)
-				{
-					oppx = 0;
+					if (oppx < 0)
+					{
+						oppx = 0;
+					}
+					else if (oppx >(240 - opponent_still_WIDTH) / 2)
+					{
+						oppx = (240 - opponent_still_WIDTH) / 2;
+					}
+					else
+					{
+						oppx -= 2;
+					}
 				}
-				else if (oppx >(240 - opponent_still_WIDTH) / 2)
+				if (playx > oppx) {
+
+					if (oppx < 0)
+					{
+						oppx = 0;
+					}
+					else if (oppx >(240 - opponent_still_WIDTH) / 2)
+					{
+						oppx = (240 - opponent_still_WIDTH) / 2;
+					}
+					else
+					{
+						oppx += 2;
+					}
+				}
+			}
+			if (pl_state == attacking)
+			{
+				rnum = RAND(2);
+				if (rnum == 1)
 				{
-					oppx = (240 - opponent_still_WIDTH) / 2;
+					if (oppx == playx)
+					{
+						op_life -= 10;
+					}
 				}
 				else 
 				{
-					oppx -= 2;
+					op_life -= 20;
 				}
 			}
-			if (playx > oppx) {
-
-				if (oppx < 0)
+			if (((pl_state == still) || (pl_state == blocking)) && (oppx == playx)) 
+			{
+				//opponent attacks player
+				if (pl_state == still)
 				{
-					oppx = 0;
+					pl_life -= 20;
 				}
-				else if (oppx >(240 - opponent_still_WIDTH) / 2)
+				if (pl_state == blocking)
 				{
-					oppx = (240 - opponent_still_WIDTH) / 2;
-				}
-				else
-				{
-					oppx += 2;
+					pl_life -= 10;
 				}
 			}
 
-			//control deltatime
 		}
-
 		
+		EraseScreen();
+		DoIntro();
 		WaitForVblank();
 		Flip();
 		//draw, win or loss depending game result
