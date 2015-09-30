@@ -7,6 +7,9 @@
 #include "assets\titlescreen.h"
 #include "assets\player_still.h"
 #include "assets\opponent_still.h"
+#include "assets\fight.h"
+#include "assets\win.h"
+#include "assets\lose.h"
 //include headers that contain the sprites
 
 //memory location definers
@@ -36,19 +39,19 @@ void PlotPixelTransparent(int x, int y, unsigned short int c)
 {
 	//set video buffer to draw sprites and remove white space
 	unsigned short int temp;
-	if ((c & 0xFF00) == 0) // bottom is transparent
+	if ((c & 0xFFFF) == 0) // bottom is transparent
 	{
-		if ((c & 0x00FF) == 0) // top is also transparent
+		if ((c & 0xFFFF) == 0) // top is also transparent
 			return;
 		// so bottom transparent, top is not so....
-		temp = ((videoBuffer[(y)* 120 + (x)]) & 0x00FF);
+		temp = ((videoBuffer[(y)* 120 + (x)]) & 0xFFFF);
 		temp |= c; // or it with c (to get the highpart of c in
 		videoBuffer[(y)* 120 + (x)] = (temp);
 	}
 	else
-	if ((c & 0xFF00) == 0) // only the top is transprent
+	if ((c & 0xFFFF) == 0) // only the top is transprent
 	{
-		temp = ((videoBuffer[(y)* 120 + (x)]) & 0xFF00);
+		temp = ((videoBuffer[(y)* 120 + (x)]) & 0xFFFF);
 		temp |= c;
 		videoBuffer[(y)* 120 + (x)] = (temp);
 	}
@@ -65,14 +68,20 @@ void WaitForVblank(void);
 void EraseScreen(void);
 void DoIntro(void);
 void DrawBackground(void);
-void ChangeBackPal(void);
 void DrawPlayerLife(int pLife);
 void DrawOpponentsLife(int oLife);
-void DrawPlayer(int xplayer, int yplayer, int direction);
-void DrawOpponent(int x, int y, int direciton);
-void DrawTime(int time);
+
+void DrawPlayerStill(int xplayer, int yplayer, int direction);
+void DrawPlayerBlock(int xplayer, int yplayer, int direction);
+void DrawPlayerAttack(int xplayer, int yplayer, int direction, int frame);
+
+void DrawOpponentStill(int x, int y, int direciton);
+void DrawOpponentBlock(int x, int y, int direciton);
+void DrawOpponentAttack(int x, int y, int direciton, int frame);
+
 void DrawLost(void);
 void DrawWin(void);
+void DrawFight(void);
 
 //main function that controls the game loop
 int main(void)
@@ -97,8 +106,11 @@ int main(void)
 
 		int rnum;
 
+		int op_frames, pl_frames;
+
 		//controls what state the player and opponent
 		enum FighterStates pl_state = still;
+		enum FighterStates op_state = still;
 
 		playx = 60;
 		playy = 155 - player_still_HEIGHT;
@@ -122,49 +134,43 @@ int main(void)
 			Flip();
 		}
 
+		DrawBackground();
+		DrawPlayerLife(pl_life);
+		DrawOpponentsLife(op_life);
+		DrawFight();
+		WaitForVblank();
+		Flip();
+		Sleep(300);
+
 		while ((pl_life > 0) && (op_life > 0))
 		{
-			// prolly want to do a screen flip here for speed????
-			// anyhow method is as follows
-			// 1. draw the bg
-			// 2. draw the bombs, life, tank
-			// 3. flip it to the screen
-			// check for user input
-			// move the bombs
-			// check for collision
-			// subtract from life
+			
 			pl_state = still;
 
-			DrawBackground();
-			DrawPlayerLife(pl_life);
-			DrawOpponentsLife(op_life);
-			//DrawTime(time);
-			DrawOpponent(oppx, oppy, 0);
-			DrawPlayer(playx, playy, 0);
-			WaitForVblank();
-			Flip();
+			
 
 			//player movement and subsequent opponent response
 
-			if (!((*KEYS) & KEY_RIGHT))
+			if ((!((*KEYS) & KEY_RIGHT)) && (pl_state != blocking) && (pl_state != attacking))
 			{
 				playx += 2;
 				pl_state = moving;
 			}
-			if (!((*KEYS) & KEY_LEFT))
+			else if (!((*KEYS) & KEY_LEFT))
 			{
 				playx -= 2;
 				pl_state = moving;
 			}
-			if (!((*KEYS) & KEY_A))
+			else if ((!((*KEYS) & KEY_A)) && (pl_state != blocking) && (pl_state != moving))
 			{
 				pl_state = attacking;
 				
 			}
-			if (!((*KEYS) & KEY_B))
+			else if ((!((*KEYS) & KEY_B)) && (pl_state != moving) && (pl_state != attacking))
 			{
 				pl_state = blocking;
 			}
+			
 			
 			//boundarycheck for player and opponent
 
@@ -178,75 +184,226 @@ int main(void)
 			}
 
 			//control opponent
-			if ((pl_state == still) || (pl_state == moving) || (((pl_state == blocking) || (pl_state == attacking)) && (oppx != playx)))
+			rnum = RAND(3);
+			if ((pl_state == still) || (pl_state == moving) || (((pl_state == blocking) || (pl_state == attacking)) && (oppx != playx)) && (rnum == 1))
 			{
-				if (playx < oppx)
+				rnum = RAND(2);
+				if ((op_life >= pl_life) || (rnum == 1))
 				{
+					if (playx < oppx)
+					{
 
-					if (oppx < 0)
-					{
-						oppx = 0;
+						if (oppx < 0)
+						{
+							oppx = 0;
+						}
+						else if (oppx >(240 - opponent_still_WIDTH) / 2)
+						{
+							oppx = (240 - opponent_still_WIDTH) / 2;
+						}
+						else
+						{
+							oppx -= 2;
+						}
 					}
-					else if (oppx >(240 - opponent_still_WIDTH) / 2)
-					{
-						oppx = (240 - opponent_still_WIDTH) / 2;
-					}
-					else
-					{
-						oppx -= 2;
+					if (playx > oppx) {
+
+						if (oppx < 0)
+						{
+							oppx = 0;
+						}
+						else if (oppx >(240 - opponent_still_WIDTH) / 2)
+						{
+							oppx = (240 - opponent_still_WIDTH) / 2;
+						}
+						else
+						{
+							oppx += 2;
+						}
 					}
 				}
-				if (playx > oppx) {
+				else 
+				{
+					rnum = RAND(2);
+					if (rnum == 1)
+					{
+						if (playx < oppx)
+						{
 
-					if (oppx < 0)
-					{
-						oppx = 0;
-					}
-					else if (oppx >(240 - opponent_still_WIDTH) / 2)
-					{
-						oppx = (240 - opponent_still_WIDTH) / 2;
-					}
-					else
-					{
-						oppx += 2;
+							if (oppx < 0)
+							{
+								oppx = 0;
+							}
+							else if (oppx >(240 - opponent_still_WIDTH) / 2)
+							{
+								oppx = (240 - opponent_still_WIDTH) / 2;
+							}
+							else
+							{
+								oppx += 2;
+							}
+						}
+						if (playx > oppx) 
+						{
+
+							if (oppx < 0)
+							{
+								oppx = 0;
+							}
+							else if (oppx >(240 - opponent_still_WIDTH) / 2)
+							{
+								oppx = (240 - opponent_still_WIDTH) / 2;
+							}
+							else
+							{
+								oppx -= 2;
+							}
+						}
 					}
 				}
+				op_state = still;
 			}
-			if (pl_state == attacking)
+			else if ((pl_state == attacking) && ((rnum == 2) || (rnum == 0)))
 			{
 				rnum = RAND(2);
 				if (rnum == 1)
 				{
 					if (oppx == playx)
 					{
-						op_life -= 10;
+						op_life -= 1;
+						op_state = blocking;
 					}
 				}
 				else 
 				{
-					op_life -= 20;
+					if (oppx == playx)
+					{
+						op_life -= 8;
+						op_state = still;
+					}
 				}
 			}
-			if (((pl_state == still) || (pl_state == blocking)) && (oppx == playx)) 
+			else if ((oppx == playx)) 
 			{
-				//opponent attacks player
-				if (pl_state == still)
+				
+				rnum = RAND(4);
+				if ((rnum >= 0) && (rnum < 3))
 				{
-					pl_life -= 20;
+					op_state = attacking;
+					if (pl_state == blocking)
+					{
+						pl_life -= 2;
+					}
+					else
+					{
+						pl_life -= 9;
+					}
+				}
+			}
+			
+			//animations need to monitor if both are performing the same action or not
+			if ((pl_state == attacking) || (op_state == attacking) || ((pl_state == attacking) && (op_state == attacking)))
+			{
+				
+
+				pl_frames = 0;
+				op_frames = 0;
+
+				while (((pl_state == attacking) && (pl_frames < 5)) || ((op_state == attacking) && (op_frames < 5)))
+				{
+					DrawBackground();
+					DrawPlayerLife(pl_life);
+					DrawOpponentsLife(op_life);
+
+					if ((op_state == attacking) && (op_frames < 5))
+					{
+						DrawOpponentAttack(oppx, oppy, 0, op_frames);
+
+						op_frames++;
+
+						//draw player dependant on the state they are in
+						if ((pl_state == still) || (pl_state == moving))
+						{
+
+							DrawPlayerStill(playx, playy, 0);
+						}
+						else if (pl_state == blocking)
+						{
+							DrawPlayerBlock(playx, playy, 0);
+						}
+					}
+
+					if ((pl_state == attacking) && (pl_frames < 5))
+					{
+						if ((op_state == still) || (op_state == moving))
+						{
+							DrawOpponentStill(oppx, oppy, 0);
+						}
+						else if (op_state == blocking)
+						{
+							DrawOpponentBlock(oppx, oppy, 0);
+						}
+
+						DrawPlayerAttack(playx, playy, 0, pl_frames);
+						pl_frames++;
+					}
+				}
+			}
+			else 
+			{
+				DrawBackground();
+				DrawPlayerLife(pl_life);
+				DrawOpponentsLife(op_life);
+
+				//draw opponent depending on state they are in
+				if ((op_state == still) || (op_state == moving))
+				{
+
+					DrawOpponentStill(oppx, oppy, 0);
+				}
+				if (op_state == blocking)
+				{
+
+					DrawOpponentBlock(oppx, oppy, 0);
+				}
+
+				//draw player dependant on the state they are in
+				if ((pl_state == still) || (pl_state == moving))
+				{
+
+					DrawPlayerStill(playx, playy, 0);
 				}
 				if (pl_state == blocking)
 				{
-					pl_life -= 10;
+
+					DrawPlayerBlock(playx, playy, 0);
 				}
 			}
 
-		}
+			WaitForVblank();
+			Flip();
+
+
+		}//end of gameplay loop
 		
+		//draw, win or loss depending game result
 		EraseScreen();
-		DoIntro();
+		//DoIntro();
+		DrawBackground();
+		DrawPlayerLife(pl_life);
+		DrawOpponentsLife(op_life);
+
+		if (op_life < 0)  {
+			DrawWin();
+		}
+		else
+		{
+			DrawLost();
+		}
+
 		WaitForVblank();
 		Flip();
-		//draw, win or loss depending game result
+		WaitForStart();
 
 	}
 
@@ -341,11 +498,6 @@ void DrawBackground(void)
 	}
 }
 
-void ChangeBackPal(void)
-{
-	//sets the palette memory to the image palette <---------------------------------------
-}
-
 void DrawPlayerLife(int pLife)
 {
 	//draws the players life bar
@@ -372,7 +524,8 @@ void DrawOpponentsLife(int oLife)
 	}
 }
 
-void DrawPlayer(int xplayer, int yplayer, int direction)
+//draw for each state in which the player can be in
+void DrawPlayerStill(int xplayer, int yplayer, int direction)
 {
 	//draws the player
 	int x, y;
@@ -387,7 +540,39 @@ void DrawPlayer(int xplayer, int yplayer, int direction)
 
 }
 
-void DrawOpponent(int xopp, int yopp, int direciton)
+void DrawPlayerBlock(int xplayer, int yplayer, int direction)
+{
+	//draws the player
+	int x, y;
+
+	for (y = 0; y < player_still_HEIGHT; y++)
+	{
+		for (x = 0; x < (player_still_WIDTH / 2); x++)
+		{
+			PlotPixel(x + xplayer, y + yplayer, player_stillData[y * (player_still_WIDTH / 2) + x]);
+		}
+	}
+
+}
+
+void DrawPlayerAttack(int xplayer, int yplayer, int direction, int frame)
+{
+	//draws the player
+	int x, y;
+
+	for (y = 0; y < player_still_HEIGHT; y++)
+	{
+		for (x = 0; x < (player_still_WIDTH / 2); x++)
+		{
+			PlotPixel(x + xplayer, y + yplayer, player_stillData[y * (player_still_WIDTH / 2) + x]);
+		}
+	}
+
+}
+
+
+//draw for each different state in which the opponent can be in
+void DrawOpponentStill(int xopp, int yopp, int direciton)
 {
 	//draws the opponent
 	int x, y;
@@ -401,18 +586,74 @@ void DrawOpponent(int xopp, int yopp, int direciton)
 	}
 }
 
-void DrawTime(int time)
+void DrawOpponentBlock(int xopp, int yopp, int direciton)
+{
+	//draws the opponent
+	int x, y;
+
+	for (y = 0; y < opponent_still_HEIGHT; y++)
+	{
+		for (x = 0; x < (opponent_still_WIDTH / 2); x++)
+		{
+			PlotPixel(x + xopp, y + yopp, opponent_stillData[y * (opponent_still_WIDTH / 2) + x]);
+		}
+	}
+}
+
+void DrawOpponentAttack(int xopp, int yopp, int direciton, int frames)
+{
+	//draws the opponent
+	int x, y;
+
+	for (y = 0; y < opponent_still_HEIGHT; y++)
+	{
+		for (x = 0; x < (opponent_still_WIDTH / 2); x++)
+		{
+			PlotPixel(x + xopp, y + yopp, opponent_stillData[y * (opponent_still_WIDTH / 2) + x]);
+		}
+	}
+}
+
+void DrawFight()
 {
 	//draws the time
+	//draws the background image when the game is playing
+	int x, y;
+
+	for (y = 0; y < fight_HEIGHT; y++)
+	{
+		for (x = 0; x < (fight_WIDTH / 2); x++)
+		{
+			PlotPixel(x + 36, y + 20, fightData[y * (fight_WIDTH / 2) + x]);
+		}
+	}
 }
 
 void DrawLost(void)
 {
 	//draws the screen when the player loses
+	int x, y;
+
+	for (y = 0; y < lose_HEIGHT; y++)
+	{
+		for (x = 0; x < (win_WIDTH / 2); x++)
+		{
+			PlotPixel(x + 10, y + 30, loseData[y * (lose_WIDTH / 2) + x]);
+		}
+	}
 }
 
 void DrawWin(void)
 {
 	//draws the screen when the player wins
+	int x, y;
+
+	for (y = 0; y < win_HEIGHT; y++)
+	{
+		for (x = 0; x < (win_WIDTH / 2); x++)
+		{
+			PlotPixel(x + 10, y + 30, winData[y * (win_WIDTH / 2) + x]);
+		}
+	}
 }
 

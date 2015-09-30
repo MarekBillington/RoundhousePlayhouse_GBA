@@ -50,5 +50,14 @@
     <ClInclude Include="assets\opponent_still.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="assets\fight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assets\win.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assets\lose.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
